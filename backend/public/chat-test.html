@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>EcoHome Store - Chat Seguro</title>
+</head>
+
+<body>
+
+    <h1>Chat interno EcoHome Store</h1>
+
+    <p id="estado">
+        Conectando...
+    </p>
+
+    <input
+        type="text"
+        id="mensaje"
+        placeholder="Escribe un mensaje"
+    >
+
+    <button id="btnEnviar">
+        Enviar mensaje
+    </button>
+
+    <h2>Mensajes</h2>
+
+    <div id="mensajes"></div>
+
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script>
+
+        // ==========================================
+        // TOKEN JWT
+        // ==========================================
+
+        const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NSwiZW1haWwiOiJjaGF0QGVjb2hvbWUuY29tIiwicm9sZSI6ImNsaWVudGUiLCJpYXQiOjE3ODY2NzA3MDEsImV4cCI6MTc4NjY3NzkwMX0.TQ3QRisj1c9eQWbtpI16K0bwsqa61WG-rNe5JgTKEmI';
+
+        // ==========================================
+        // CONEXIÓN SOCKET.IO
+        // ==========================================
+
+        const socket = io({
+            auth: {
+                token: token
+            }
+        });
+
+        const estado = document.getElementById('estado');
+        const inputMensaje = document.getElementById('mensaje');
+        const botonEnviar = document.getElementById('btnEnviar');
+        const contenedorMensajes =
+            document.getElementById('mensajes');
+
+        // ==========================================
+        // CONEXIÓN EXITOSA
+        // ==========================================
+
+        socket.on('connect', () => {
+
+            estado.textContent =
+                '🟢 Conectado y autenticado';
+
+            console.log(
+                'Socket conectado:',
+                socket.id
+            );
+
+        });
+
+        // ==========================================
+        // ERROR DE AUTENTICACIÓN
+        // ==========================================
+
+        socket.on('connect_error', (error) => {
+
+            estado.textContent =
+                '🔴 Error de autenticación';
+
+            console.error(
+                'Error Socket.IO:',
+                error.message
+            );
+
+        });
+
+        // ==========================================
+        // RECEPCIÓN DE MENSAJES
+        // ==========================================
+
+        socket.on('new-message', (data) => {
+
+            const mensaje =
+                document.createElement('p');
+
+            mensaje.textContent =
+                `[${data.created_at}] ${data.text}`;
+
+            contenedorMensajes.appendChild(mensaje);
+
+        });
+
+        // ==========================================
+        // ENVIAR MENSAJE
+        // ==========================================
+
+        botonEnviar.addEventListener('click', () => {
+
+            const mensaje =
+                inputMensaje.value.trim();
+
+            if (mensaje === '') {
+                return;
+            }
+
+            socket.emit(
+                'new-message',
+                mensaje
+            );
+
+            inputMensaje.value = '';
+
+        });
+
+    </script>
+
+</body>
+
+</html>
